@@ -1,0 +1,140 @@
+
+/* =====================================
+   FABRIC TO FASHION AI
+   Luxury Editorial Theme
+===================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+:root {
+    --ivory: #F8F5F0;
+    --cream: #EFE8DE;
+    --burgundy: #713D4B;
+    --burgundy-dark: #542B37;
+    --chocolate: #49352F;
+    --muted: #887D74;
+    --gold: #B69A72;
+    --white: #FFFFFF;
+}
+
+/* Main application */
+
+.stApp {
+    background-color: var(--ivory);
+    color: var(--chocolate);
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Main content */
+
+.block-container {
+    max-width: 1250px;
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+}
+
+/* Headings */
+
+h1, h2, h3 {
+    font-family: 'Playfair Display', serif !important;
+    color: var(--chocolate) !important;
+}
+
+h1 {
+    font-size: 2.8rem !important;
+    font-weight: 500 !important;
+}
+
+h2 {
+    font-size: 2rem !important;
+}
+
+h3 {
+    font-size: 1.35rem !important;
+}
+
+/* Sidebar */
+
+section[data-testid="stSidebar"] {
+    background-color: #EEE6DC;
+    border-right: 1px solid #DED3C6;
+}
+
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2 {
+    color: var(--burgundy) !important;
+}
+
+/* Buttons */
+
+.stButton > button,
+.stDownloadButton > button {
+    background-color: var(--burgundy);
+    color: white;
+    border: 1px solid var(--burgundy);
+    border-radius: 5px;
+    padding: 0.65rem 1.4rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.stButton > button:hover,
+.stDownloadButton > button:hover {
+    background-color: var(--burgundy-dark);
+    color: white;
+    border-color: var(--burgundy-dark);
+}
+
+/* File uploader */
+
+[data-testid="stFileUploader"] {
+    background-color: var(--white);
+    border: 1px dashed #B69A72;
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+/* Input fields */
+
+.stSelectbox > div > div,
+.stNumberInput > div > div {
+    background-color: var(--white);
+    border-radius: 6px;
+}
+
+/* Dividers */
+
+hr {
+    border-color: #DED3C6;
+}
+
+/* Images */
+
+.stImage img {
+    border-radius: 8px;
+}
+
+/* Captions */
+
+.stCaption {
+    color: var(--muted);
+}
+
+/* Navigation and labels */
+
+label, p {
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Responsive layout */
+
+@media (max-width: 768px) {
+    .block-container {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem !important;
+    }
+}
