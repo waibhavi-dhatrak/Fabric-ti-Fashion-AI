@@ -5,7 +5,7 @@ import base64
 from io import BytesIO
 from dotenv import load_dotenv
 
-load_dotenv(".env", override=True)
+load_dotenv(".env", override=False)
 
 CLOUDFLARE_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN")
 CLOUDFLARE_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID")
