@@ -558,10 +558,10 @@ if st.session_state.get("generated_fashion_image"):
     )
 
     pdf_data = create_pdf(
-        fabric_image,
-        occasion,
-        audience,
-        budget
+    st.session_state.get("demo_image"),
+    occasion,
+    audience,
+    budget
     )
 
     st.download_button(
