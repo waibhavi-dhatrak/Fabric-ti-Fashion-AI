@@ -557,21 +557,20 @@ if st.session_state.get("generated_fashion_image"):
         mime="image/png"
     )
 
-        pdf_data = create_pdf(
-            fabric_image,
-            occasion,
-            audience,
-            budget
-        )
+    pdf_data = create_pdf(
+        fabric_image,
+        occasion,
+        audience,
+        budget
+    )
 
-        st.download_button(
-            "Download Collection Report (PDF)",
-            data=pdf_data,
-            file_name="Fabric_to_Fashion_Demo_Report.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
-
+    st.download_button(
+        "Download Collection Report (PDF)",
+        data=pdf_data,
+        file_name="Fabric_to_Fashion_Demo_Report.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )     
 # --------------------------------------------------
 # ABOUT PAGE
 # --------------------------------------------------
