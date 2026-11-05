@@ -1,5 +1,13 @@
 
 import streamlit as st
+import os
+
+for key in ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"]:
+    if key in st.secrets:
+        os.environ[key] = st.secrets[key]
+
+from image_generator import generate_fashion_image
+from types import SimpleNamespace
 from io import BytesIO
 from datetime import date
 
@@ -502,6 +510,52 @@ elif page == "Design Studio":
         st.divider()
 
         st.header("Your Collection Report")
+        st.header("AI Fashion Image Generator")
+
+if st.button("Generate Fashion Picture"):
+    try:
+        fabric_data = SimpleNamespace(
+            fabric_type="Silk",
+            primary_color="Burgundy",
+            secondary_colors=["Ivory", "Antique Gold"],
+            pattern="Traditional woven pattern",
+            texture="Smooth and elegant"
+        )
+
+        design_data = SimpleNamespace(
+            design_concepts=[
+                "Luxury burgundy silk Anarkali with antique gold embroidery"
+            ],
+            garment_recommendations=["Silk Anarkali"],
+            styling_suggestions=["Antique gold jewellery"]
+        )
+
+        with st.spinner("AI is creating your fashion design..."):
+            image = generate_fashion_image(
+                fabric_data,
+                design_data,
+                "Festive",
+                "Contemporary women"
+            )
+
+            st.session_state.generated_fashion_image = image.getvalue()
+
+    except Exception as e:
+        st.error(f"Image generation failed: {e}")
+
+if st.session_state.get("generated_fashion_image"):
+    st.image(
+        st.session_state.generated_fashion_image,
+        caption="AI Generated Fashion Design",
+        use_container_width=True
+    )
+
+    st.download_button(
+        "Download Fashion Image",
+        data=st.session_state.generated_fashion_image,
+        file_name="fashion_design.png",
+        mime="image/png"
+    )
 
         pdf_data = create_pdf(
             fabric_image,
