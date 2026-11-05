@@ -1,8 +1,24 @@
+
 import streamlit as st
-from pathlib import Path
-from workflow import fashion_workflow
-from image_generator import generate_fashion_image
-from pdf_generator import generate_pdf_report
+from io import BytesIO
+from datetime import date
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image as PDFImage
+)
+
+# --------------------------------------------------
+# PAGE CONFIGURATION
+# --------------------------------------------------
 
 st.set_page_config(
     page_title="Fabric-to-Fashion AI",
@@ -10,419 +26,543 @@ st.set_page_config(
     layout="wide"
 )
 
-# Load luxury fashion theme
-css_path = Path("assets/style.css")
+# --------------------------------------------------
+# LUXURY THEME
+# --------------------------------------------------
 
-with open(css_path, "r") as css_file:
-    st.markdown(
-        f"<style>{css_file.read()}</style>",
-        unsafe_allow_html=True
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+.stApp {
+    background: #F8F5F0;
+    color: #49352F;
+    font-family: 'DM Sans', sans-serif;
+}
+
+h1, h2, h3 {
+    font-family: 'Playfair Display', serif !important;
+    color: #49352F !important;
+}
+
+section[data-testid="stSidebar"] {
+    background: #EEE6DC;
+}
+
+.stButton > button,
+.stDownloadButton > button {
+    background: #713D4B;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.65rem 1.2rem;
+}
+
+.stButton > button:hover,
+.stDownloadButton > button:hover {
+    background: #542B37;
+    color: white;
+}
+
+.demo-banner {
+    background: #EFE8DE;
+    border-left: 4px solid #B69A72;
+    padding: 14px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.metric-card {
+    background: white;
+    border: 1px solid #DED3C6;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 12px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --------------------------------------------------
+# SAMPLE DATA
+# --------------------------------------------------
+
+FABRIC_ANALYSIS = {
+    "fabric_type": "Silk / Silk-blend (sample classification)",
+    "primary_color": "Based on the selected design palette",
+    "secondary_colors": ["Ivory", "Antique Gold", "Deep Burgundy"],
+    "pattern": "Traditional woven-inspired pattern",
+    "texture": "Smooth, elegant drape (sample description)",
+    "seasons": ["Winter", "Autumn", "Festive occasions"],
+    "clothing": ["Anarkali", "Saree blouse", "Lehenga", "Kurta set"],
+    "description": (
+        "This sample analysis demonstrates how fabric characteristics "
+        "can be translated into fashion design possibilities. "
+        "It is not an AI analysis of the uploaded photograph."
+    )
+}
+
+DESIGN_CONCEPTS = [
+    "Contemporary silk Anarkali with subtle antique-gold detailing",
+    "Structured festive blouse with elegant sleeve detailing",
+    "Flowing A-line kurta with coordinated embroidered accents"
+]
+
+GARMENTS = [
+    "Silk Anarkali suit",
+    "Contemporary festive blouse",
+    "Coordinated dupatta"
+]
+
+STYLING = [
+    "Antique gold statement earrings",
+    "Minimal gold bangles",
+    "Embellished traditional footwear"
+]
+
+COLLECTION_OUTFITS = [
+    "01 — Signature Silk Anarkali",
+    "02 — Modern Festive Ensemble",
+    "03 — Classic Coordinated Kurta Set",
+    "04 — Statement Occasion Wear"
+]
+
+# --------------------------------------------------
+# PDF GENERATOR
+# --------------------------------------------------
+
+def create_pdf(fabric_image, occasion, audience, budget):
+
+    buffer = BytesIO()
+
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=45,
+        leftMargin=45,
+        topMargin=45,
+        bottomMargin=45
     )
 
-# Luxury sidebar navigation
-with st.sidebar:
-    st.markdown(
-        "<h1 style='font-family:Georgia; color:#713D4B;'>ATELIER AI</h1>",
-        unsafe_allow_html=True
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "LuxuryTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=23,
+        textColor=colors.HexColor("#713D4B"),
+        spaceAfter=15
     )
 
-    st.caption("YOUR PERSONAL FASHION STUDIO")
-
-    st.divider()
-
-    page = st.radio(
-        "NAVIGATION",
-        [
-            "Home",
-            "Design Studio",
-            "About Project"
-        ],
-        label_visibility="visible"
+    heading_style = ParagraphStyle(
+        "LuxuryHeading",
+        parent=styles["Heading2"],
+        textColor=colors.HexColor("#713D4B"),
+        spaceBefore=15,
+        spaceAfter=8
     )
 
-    st.divider()
+    body_style = styles["BodyText"]
 
-    st.caption("POWERED BY GEMINI + LANGGRAPH")
+    story = []
 
-# Main application heading
-# HOME PAGE
-if page == "Home":
+    story.append(Paragraph("FABRIC-TO-FASHION AI", title_style))
+    story.append(Paragraph(
+        "Fashion Design & Collection Planning Report",
+        styles["Heading2"]
+    ))
+    story.append(Spacer(1, 12))
 
-    st.title("Welcome to Atelier AI")
-    st.subheader("Where fabric meets imagination.")
+    story.append(Paragraph(
+        "<b>DEMO REPORT — SAMPLE RESULTS, NOT LIVE AI OUTPUT</b>",
+        body_style
+    ))
 
-    st.write(
-        "An intelligent fashion design studio that transforms "
-        "fabric photographs into creative fashion collections."
-    )
+    story.append(Spacer(1, 15))
 
-    st.divider()
+    story.append(Paragraph("Project Details", heading_style))
 
-    st.markdown("### Your creative journey")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.markdown("#### 01")
-        st.write("Fabric Analysis")
-        st.caption("Discover fabric characteristics using AI.")
-
-    with col2:
-        st.markdown("#### 02")
-        st.write("Fashion Design")
-        st.caption("Explore creative garment recommendations.")
-
-    with col3:
-        st.markdown("#### 03")
-        st.write("Collection Planning")
-        st.caption("Build a coordinated fashion collection.")
-
-    st.info("Select Design Studio from the sidebar to begin.")
-    st.stop()
-
-
-# ABOUT PROJECT PAGE
-elif page == "About Project":
-
-    st.title("About Atelier AI")
-    st.subheader("The intelligence behind fashion creativity.")
-
-    st.write(
-        "Fabric-to-Fashion AI is an intelligent fashion design "
-        "and collection planning system. It analyses fabric images "
-        "and generates personalized fashion recommendations."
-    )
-
-    st.divider()
-
-    st.markdown("### Technologies used")
-
-    technologies = [
-        "Python",
-        "Streamlit",
-        "LangChain",
-        "LangGraph",
-        "Google Gemini",
-        "Cloudflare Workers AI",
-        "ReportLab"
+    details = [
+        ["Occasion", occasion],
+        ["Target Audience", audience],
+        ["Collection Budget", f"INR {budget:,}"],
+        ["Report Date", str(date.today())]
     ]
 
-    for technology in technologies:
-        st.write("•", technology)
+    table = Table(details, colWidths=[150, 320])
 
-    st.markdown("### AI Agent Architecture")
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#EFE8DE")),
+        ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#49352F")),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#DED3C6")),
+        ("PADDING", (0, 0), (-1, -1), 9)
+    ]))
 
-    st.write("Agent 1 — Fabric Analysis")
-    st.write("Agent 2 — Fashion Design")
-    st.write("Agent 3 — Collection Planning")
-
-    st.stop()
-
-    # DESIGN STUDIO PAGE
-else:
-
-    st.title("Fabric to Fashion")
-    st.subheader("Where fabric meets imagination.")
-
-    st.write(
-        "Transform your fabric into a thoughtfully designed fashion collection."
-    )
-
-    # Initialize session state
-    if "fashion_results" not in st.session_state:
-        st.session_state.fashion_results = None
-
-    if "generated_image" not in st.session_state:
-        st.session_state.generated_image = None
-
-    st.divider()
-
-    st.markdown("## Your Design Studio")
-    st.caption("Begin with a fabric. Let AI imagine the possibilities.")
-
-    st.markdown("### 01 — Upload your fabric")
-
-    fabric_image = st.file_uploader(
-        "Choose your fabric photograph",
-        type=["jpg", "jpeg", "png"],
-        help="Upload a clear photograph of your fabric."
-    )
+    story.append(table)
 
     if fabric_image:
-        st.image(
-            fabric_image,
-            caption="Your selected fabric",
-            width=350
-        )
-        st.success("Fabric uploaded successfully!")
+        story.append(Paragraph("Uploaded Fabric Photograph", heading_style))
+        try:
+            uploaded = PDFImage(
+                BytesIO(fabric_image),
+                width=2.5 * inch,
+                height=2.5 * inch,
+                kind="proportional"
+            )
+            story.append(uploaded)
+        except Exception:
+            story.append(Paragraph(
+                "Fabric photograph could not be embedded.",
+                body_style
+            ))
 
-    st.markdown("### 02 — Collection preferences")
+    story.append(Paragraph("Fabric Analysis", heading_style))
+    story.append(Paragraph(
+        FABRIC_ANALYSIS["description"],
+        body_style
+    ))
+
+    story.append(Paragraph("Fashion Design Recommendations", heading_style))
+
+    for item in DESIGN_CONCEPTS:
+        story.append(Paragraph(f"• {item}", body_style))
+        story.append(Spacer(1, 5))
+
+    story.append(Paragraph("Recommended Garments", heading_style))
+
+    for item in GARMENTS:
+        story.append(Paragraph(f"• {item}", body_style))
+
+    story.append(Paragraph("Collection Plan", heading_style))
+
+    for item in COLLECTION_OUTFITS:
+        story.append(Paragraph(f"• {item}", body_style))
+
+    story.append(Paragraph("Estimated Budget Allocation", heading_style))
+
+    budget_rows = [
+        ["Category", "Allocation"],
+        ["Fabric and material", f"INR {budget * 0.40:,.0f}"],
+        ["Stitching and construction", f"INR {budget * 0.25:,.0f}"],
+        ["Embroidery and detailing", f"INR {budget * 0.20:,.0f}"],
+        ["Accessories and finishing", f"INR {budget * 0.15:,.0f}"]
+    ]
+
+    budget_table = Table(budget_rows, colWidths=[260, 210])
+
+    budget_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#713D4B")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#DED3C6")),
+        ("PADDING", (0, 0), (-1, -1), 8)
+    ]))
+
+    story.append(budget_table)
+
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(
+        "This report demonstrates the proposed project workflow "
+        "using predefined sample fashion recommendations.",
+        body_style
+    ))
+
+    document.build(story)
+
+    return buffer.getvalue()
+
+
+# --------------------------------------------------
+# SIDEBAR NAVIGATION
+# --------------------------------------------------
+
+st.sidebar.title("ATELIER")
+st.sidebar.caption("FABRIC-TO-FASHION AI")
+st.sidebar.divider()
+
+page = st.sidebar.radio(
+    "Navigation",
+    ["Home", "Design Studio", "About Project"]
+)
+
+st.sidebar.divider()
+st.sidebar.caption("AI Fashion Design & Collection Planning")
+
+# --------------------------------------------------
+# HOME PAGE
+# --------------------------------------------------
+
+if page == "Home":
+
+    st.title("Fabric to Fashion AI")
+    st.subheader("Where fabric inspiration meets intelligent design.")
+
+    st.markdown("""
+    Transform fabric inspiration into fashion possibilities
+    through an interactive fashion design and collection
+    planning experience.
+    """)
+
+    st.markdown("""
+    <div class="demo-banner">
+    <b>Presentation Demo Mode</b><br>
+    This online demonstration uses predefined sample results.
+    Live Gemini and Cloudflare API calls are disabled.
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        occasion = st.selectbox(
-            "Occasion",
-            ["Casual", "Party", "Wedding", "Office", "Summer"]
-        )
+        st.markdown("### Fabric Analysis")
+        st.write("Explore fabric characteristics and design possibilities.")
+
+        st.markdown("### Fashion Design")
+        st.write("Discover garment concepts, colours and styling.")
 
     with col2:
-        audience = st.selectbox(
-            "Target audience",
-            ["Women", "Men", "Children", "Unisex"]
+        st.markdown("### Collection Planning")
+        st.write("Build coordinated outfits for selected occasions.")
+
+        st.markdown("### PDF Reports")
+        st.write("Export a sample fashion collection report.")
+
+    st.info("Select Design Studio from the sidebar to begin.")
+
+# --------------------------------------------------
+# DESIGN STUDIO
+# --------------------------------------------------
+
+elif page == "Design Studio":
+
+    st.title("The Design Studio")
+    st.caption("Transform your fabric inspiration into a fashion collection.")
+
+    st.markdown("""
+    <div class="demo-banner">
+    <b>Demo Mode:</b> The results below are predefined examples.
+    They are not generated by live AI models.
+    </div>
+    """, unsafe_allow_html=True)
+
+    left, right = st.columns([1.1, 0.9])
+
+    with left:
+
+        st.subheader("01. Upload Your Fabric")
+
+        uploaded_file = st.file_uploader(
+            "Choose a fabric photograph",
+            type=["jpg", "jpeg", "png"]
         )
 
-    budget = st.number_input(
-        "Collection budget (₹)",
-        min_value=500,
-        max_value=100000,
-        value=5000,
-        step=500
-    )
-# Generate fashion collection
-if st.button("Generate Fashion Collection"):
+        if uploaded_file:
+            st.image(
+                uploaded_file,
+                caption="Your Uploaded Fabric",
+                use_container_width=True
+            )
 
-    if fabric_image is None:
-        st.error("Please upload a fabric image first.")
+    with right:
 
-    else:
-        try:
-            with st.spinner("Running all three AI agents..."):
+        st.subheader("02. Collection Preferences")
 
-                result = fashion_workflow.invoke({
-                    "fabric_image": fabric_image,
-                    "occasion": occasion,
-                    "audience": audience,
-                    "budget": int(budget)
-                })
+        occasion = st.selectbox(
+            "Select Occasion",
+            [
+                "Festive Wear",
+                "Wedding Wear",
+                "Casual Wear",
+                "Formal Wear",
+                "Party Wear"
+            ]
+        )
 
-            st.session_state.fashion_results = result
-            st.session_state.generated_image = None
+        audience = st.selectbox(
+            "Target Audience",
+            [
+                "Women",
+                "Men",
+                "Unisex",
+                "Young Adults"
+            ]
+        )
 
-            st.success("Fashion collection generated successfully!")
-
-        except Exception as e:
-            st.error(f"Collection generation failed: {e}")
-
-# Display saved results
-if st.session_state.fashion_results is not None:
-
-    result = st.session_state.fashion_results
-
-    fabric_result = result["fabric_analysis"]
-    fashion_result = result["fashion_design"]
-    collection_result = result["collection_plan"]
-
-    st.divider()
-    st.header("1. Fabric Analysis Results")
-
-    st.write("**Fabric Type:**", fabric_result.fabric_type)
-    st.write("**Primary Colour:**", fabric_result.primary_color)
-    st.write("**Secondary Colours:**", ", ".join(fabric_result.secondary_colors))
-    st.write("**Pattern:**", fabric_result.pattern)
-    st.write("**Texture:**", fabric_result.texture)
-    st.write("**Suitable Seasons:**", ", ".join(fabric_result.suitable_seasons))
-    st.write("**Suitable Clothing:**", ", ".join(fabric_result.suitable_clothing))
-    st.write("**Description:**", fabric_result.description)
+        budget = st.number_input(
+            "Collection Budget (INR)",
+            min_value=1000,
+            max_value=1000000,
+            value=25000,
+            step=1000
+        )
 
     st.divider()
-    st.header("2. Fashion Design Recommendations")
 
-    st.subheader("Garment Recommendations")
-    for item in fashion_result.garment_recommendations:
-        st.write("•", item)
+    if st.button("Generate Sample Fashion Collection", use_container_width=True):
 
-    st.subheader("Design Concepts")
-    for item in fashion_result.design_concepts:
-        st.write("•", item)
+        if not uploaded_file:
+            st.warning("Please upload a fabric photograph first.")
 
-    st.subheader("Colour Combinations")
-    for item in fashion_result.color_combinations:
-        st.write("•", item)
+        else:
+            st.session_state.demo_ready = True
+            st.session_state.demo_image = uploaded_file.getvalue()
+            st.session_state.demo_occasion = occasion
+            st.session_state.demo_audience = audience
+            st.session_state.demo_budget = budget
 
-    st.subheader("Styling Suggestions")
-    for item in fashion_result.styling_suggestions:
-        st.write("•", item)
+    if st.session_state.get("demo_ready", False):
 
-    st.subheader("Occasion Suitability")
-    for item in fashion_result.occasion_suitability:
-        st.write("•", item)
+        fabric_image = st.session_state.demo_image
+        occasion = st.session_state.demo_occasion
+        audience = st.session_state.demo_audience
+        budget = st.session_state.demo_budget
 
-    st.subheader("Design Summary")
-    st.write(fashion_result.design_summary)
+        st.success("Your sample fashion collection is ready!")
 
-    st.divider()
-    st.header("3. Complete Fashion Collection")
+        fabric_tab, design_tab, collection_tab = st.tabs([
+            "Fabric Analysis",
+            "Fashion Design",
+            "Collection Plan"
+        ])
 
-    st.subheader("Collection Name")
-    st.write(collection_result.collection_name)
+        with fabric_tab:
 
-    st.subheader("Collection Theme")
-    st.write(collection_result.collection_theme)
+            st.subheader("Fabric Analysis — Sample")
 
-    st.subheader("Selected Outfits")
-    for item in collection_result.selected_outfits:
-        st.write("•", item)
+            st.write("**Fabric Type:**", FABRIC_ANALYSIS["fabric_type"])
+            st.write("**Primary Colour:**", FABRIC_ANALYSIS["primary_color"])
+            st.write("**Secondary Colours:**", ", ".join(FABRIC_ANALYSIS["secondary_colors"]))
+            st.write("**Pattern:**", FABRIC_ANALYSIS["pattern"])
+            st.write("**Texture:**", FABRIC_ANALYSIS["texture"])
 
-    st.subheader("Collection Colour Palette")
-    for color in collection_result.color_palette:
-        st.write("•", color)
+            st.write("**Suitable Seasons:**")
+            for item in FABRIC_ANALYSIS["seasons"]:
+                st.write(f"- {item}")
 
-    st.subheader("Target Customer")
-    st.write(collection_result.target_customer)
+            st.write("**Suitable Clothing:**")
+            for item in FABRIC_ANALYSIS["clothing"]:
+                st.write(f"- {item}")
 
-    st.subheader("Estimated Budget Breakdown")
-    for item in collection_result.budget_breakdown:
-        st.write("•", item)
+            st.info(FABRIC_ANALYSIS["description"])
 
-    
-    st.divider()
-    st.header("Your AI Collection Results")
-    st.caption("Your fabric, reimagined through artificial intelligence.")
+        with design_tab:
 
-    fabric_tab, design_tab, collection_tab = st.tabs([
-        "01 · Fabric Analysis",
-        "02 · Fashion Design",
-        "03 · Collection Plan"
-    ])
+            st.subheader("Fashion Design Recommendations")
 
-    # TAB 1 — FABRIC ANALYSIS
-    with fabric_tab:
-        st.subheader("Understanding your fabric")
+            st.write("**Occasion:**", occasion)
+            st.write("**Target Audience:**", audience)
 
-        col1, col2 = st.columns(2)
+            st.write("### Design Concepts")
+            for item in DESIGN_CONCEPTS:
+                st.write(f"- {item}")
 
-        with col1:
-            st.metric("Fabric Type", fabric_result.fabric_type)
-            st.metric("Primary Colour", fabric_result.primary_color)
+            st.write("### Garment Recommendations")
+            for item in GARMENTS:
+                st.write(f"- {item}")
 
-        with col2:
-            st.metric("Pattern", fabric_result.pattern)
-            st.metric("Texture", fabric_result.texture)
+            st.write("### Styling Suggestions")
+            for item in STYLING:
+                st.write(f"- {item}")
 
-        st.markdown("### Secondary Colours")
-        st.write(", ".join(fabric_result.secondary_colors))
+        with collection_tab:
 
-        st.markdown("### Suitable Seasons")
-        for item in fabric_result.suitable_seasons:
-            st.write("•", item)
+            st.subheader("The Modern Heritage Collection")
 
-        st.markdown("### Suitable Clothing")
-        for item in fabric_result.suitable_clothing:
-            st.write("•", item)
+            st.write(
+                "A sample collection combining traditional inspiration "
+                "with contemporary silhouettes."
+            )
 
-        st.markdown("### Fabric Description")
-        st.write(fabric_result.description)
+            st.write("### Selected Outfits")
 
-    # TAB 2 — FASHION DESIGN
-    with design_tab:
-        st.subheader("Your fashion design recommendations")
+            for item in COLLECTION_OUTFITS:
+                st.write(f"- {item}")
 
-        st.markdown("### Garment Recommendations")
-        for item in fashion_result.garment_recommendations:
-            st.write("•", item)
+            st.write("### Collection Colour Palette")
+            st.write("Ivory | Antique Gold | Burgundy | Champagne")
 
-        st.markdown("### Design Concepts")
-        for item in fashion_result.design_concepts:
-            st.write("•", item)
+            st.write("### Target Customer")
+            st.write(audience)
 
-        st.markdown("### Colour Combinations")
-        for item in fashion_result.color_combinations:
-            st.write("•", item)
+            st.write("### Estimated Budget Breakdown")
 
-        st.markdown("### Styling Suggestions")
-        for item in fashion_result.styling_suggestions:
-            st.write("•", item)
+            allocations = [
+                ("Fabric and Material", 0.40),
+                ("Stitching and Construction", 0.25),
+                ("Embroidery and Detailing", 0.20),
+                ("Accessories and Finishing", 0.15)
+            ]
 
-        st.markdown("### Occasion Suitability")
-        for item in fashion_result.occasion_suitability:
-            st.write("•", item)
-
-        st.markdown("### Design Summary")
-        st.write(fashion_result.design_summary)
-
-    # TAB 3 — COLLECTION PLAN
-    with collection_tab:
-        st.subheader(collection_result.collection_name)
-
-        st.markdown("### Collection Theme")
-        st.write(collection_result.collection_theme)
-
-        st.markdown("### Selected Outfits")
-        for item in collection_result.selected_outfits:
-            st.write("•", item)
-
-        st.markdown("### Collection Colour Palette")
-        for color in collection_result.color_palette:
-            st.write("•", color)
-
-        st.markdown("### Target Customer")
-        st.write(collection_result.target_customer)
-
-        st.markdown("### Estimated Budget Breakdown")
-        for item in collection_result.budget_breakdown:
-            st.write("•", item)
-
-        st.markdown("### Collection Summary")
-        st.write(collection_result.collection_summary)
-
-            # LUXURY FASHION IMAGE GALLERY
-    st.divider()
-
-    st.header("Your Fashion Editorial")
-    st.caption(
-        "Discover your fabric transformed into a fashion design."
-    )
-
-    if st.button("Generate Fashion Image", key="generate_fashion_image"):
-        try:
-            with st.spinner("Creating your fashion editorial..."):
-                generated_image = generate_fashion_image(
-                    fabric_result,
-                    fashion_result,
-                    occasion,
-                    audience
+            for name, percentage in allocations:
+                st.write(
+                    f"- {name}: INR {budget * percentage:,.0f}"
                 )
 
-                st.session_state.generated_image = generated_image.getvalue()
+            st.write(f"**Total Budget: INR {budget:,.0f}**")
 
-            st.success("Your fashion design is ready!")
+        st.divider()
 
-        except Exception as e:
-            st.error(f"Image generation failed: {e}")
+        st.header("Your Collection Report")
 
-    if st.session_state.generated_image is not None:
-        st.image(
-            st.session_state.generated_image,
-            caption="AI-Generated Fashion Editorial",
-            use_container_width=True
+        pdf_data = create_pdf(
+            fabric_image,
+            occasion,
+            audience,
+            budget
         )
 
         st.download_button(
-            label="Download Fashion Design",
-            data=st.session_state.generated_image,
-            file_name="Atelier_AI_Fashion_Design.png",
-            mime="image/png",
-            key="download_fashion_design"
+            "Download Collection Report (PDF)",
+            data=pdf_data,
+            file_name="Fabric_to_Fashion_Demo_Report.pdf",
+            mime="application/pdf",
+            use_container_width=True
         )
 
-    # PDF COLLECTION REPORT
-    st.divider()
+# --------------------------------------------------
+# ABOUT PAGE
+# --------------------------------------------------
 
-    st.header("Your Collection Report")
-    st.caption("Take your complete AI-generated collection with you.")
+else:
 
-    pdf_data = generate_pdf_report(
-        fabric_result,
-        fashion_result,
-        collection_result,
-        st.session_state.generated_image
+    st.title("About the Project")
+
+    st.subheader(
+        "An Intelligent Fashion Design and Collection Planning Agent"
     )
 
-    st.download_button(
-        label="Download Complete Collection Report (PDF)",
-        data=pdf_data,
-        file_name="Atelier_AI_Collection_Report.pdf",
-        mime="application/pdf",
-        key="download_collection_pdf"
+    st.write("""
+    Fabric-to-Fashion AI is an academic project that demonstrates
+    how artificial intelligence technologies can support fabric
+    analysis, fashion design and coordinated collection planning.
+    """)
+
+    st.header("Technology Stack")
+
+    technologies = [
+        ["Technology", "Purpose"],
+        ["Python", "Core programming"],
+        ["Streamlit", "Interactive web interface"],
+        ["LangChain", "LLM integration in the full AI version"],
+        ["LangGraph", "Multi-agent orchestration in the full AI version"],
+        ["Google Gemini", "Fabric analysis and design recommendations"],
+        ["Cloudflare Workers AI", "Fashion image generation"],
+        ["Pydantic", "Structured data validation"]
+    ]
+
+    technology_table = st.table(technologies)
+
+    st.header("Three-Agent Architecture")
+
+    st.markdown("""
+    1. **Fabric Analysis Agent** — analyses fabric characteristics.
+    2. **Fashion Design Agent** — recommends garment designs.
+    3. **Collection Planning Agent** — coordinates the final collection.
+    """)
+
+    st.info(
+        "The full AI-powered workflow is available in the local project. "
+        "This online version is a sample demonstration and does not call "
+        "the live AI agents."
     )
+
+    st.caption("Developed as an academic project — Fabric-to-Fashion AI.")
